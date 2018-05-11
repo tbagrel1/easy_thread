@@ -37,8 +37,7 @@ class EasyThread(Thread):
         self, name, func, args, kwargs, debug_level=DEBUG_LEVEL,
         set_result=LOSE_RESULT, write_log=print):
         """Init method."""
-        super().__init__()
-        self._name = name
+        super().__init__(name=name)
         self._func = func
         self._args = args
         self._kwargs = kwargs
@@ -47,15 +46,6 @@ class EasyThread(Thread):
         self._write_log = write_log
 
     if True:  # to fold all the properties
-        def get_name(self):
-            """Name getter."""
-            return self._name
-
-        def set_name(self, new_value):
-            """Name setter."""
-            raise ValueError("name cannot be changed after initialization.")
-
-        name = property(get_name, set_name)
 
         def get_func(self):
             """func getter."""
@@ -132,8 +122,10 @@ class EasyThread(Thread):
 
     def log(self, level, msg):
         """Prints msg iif level <= self._debug_level."""
+        if not isinstance(level, DebugLevel):
+            raise TypeError("Log level should be a DebugLevel enum value.")
         if level <= self._debug_level:
-            self._write_log("[Thread {}] {}".format(self._name, msg))
+            self._write_log("[Thread {}] {}".format(self.name, msg))
 
 class ThreadPool(object):
     """Represents a thread pool, which can accept arbitrary number of threads
@@ -217,14 +209,20 @@ class ThreadPool(object):
 
     def has_started(self, key):
         """Says if the specified thread has started."""
+        if key not in self._registry:
+            raise IndexError("Specified key not present in the registry.")
         return self._registry[key] != TaskState.NOT_STARTED
 
     def is_running(self, key):
         """Says if the specified thread is running."""
+        if key not in self._registry:
+            raise IndexError("Specified key not present in the registry.")
         return self._registry[key] == TaskState.RUNNING
 
     def has_finished(self, key):
         """Says if the specified thread has finished."""
+        if key not in self._registry:
+            raise IndexError("Specified key not present in the registry.")
         result = self._registry[key]
         return (
             result != TaskState.NOT_STARTED and
@@ -232,6 +230,8 @@ class ThreadPool(object):
 
     def has_succeeded(self, key):
         """Says if the specified thread has succeeded."""
+        if key not in self._registry:
+            raise IndexError("Specified key not present in the registry.")
         result = self._registry[key]
         return (
             result != TaskState.NOT_STARTED and
@@ -240,10 +240,14 @@ class ThreadPool(object):
 
     def has_failed(self, key):
         """Says if the specified thread has failed."""
+        if key not in self._registry:
+            raise IndexError("Specified key not present in the registry.")
         return self._registry[key] == TaskState.FAILED
 
     def get_result(self, key):
         """Returns the result of the specified thread."""
+        if key not in self._registry:
+            raise IndexError("Specified key not present in the registry.")
         return self._registry[key]
 
 def main():
